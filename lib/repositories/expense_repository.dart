@@ -19,15 +19,23 @@ class ExpenseRepository {
     });
   }
 
-  // 特定の日の支出を取得（カレンダー表示用）
-  Future<List<Expense>> getExpensesByDate(DateTime date) async {
-    final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
+  Future<List<Expense>> getExpensesByMonth(DateTime month) async {
+    final startOfMonth = DateTime(month.year, month.month, 1);
+    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
 
     return await isar.expenses
         .filter()
-        .dateGreaterThan(startOfDay.subtract(const Duration(seconds: 1)))
-        .dateLessThan(endOfDay)
+        .dateBetween(startOfMonth, endOfMonth)
+        .findAll();
+  }
+
+  Future<List<Expense>> getExpensesByDate(DateTime date) async {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    return await isar.expenses
+        .filter()
+        .dateBetween(startOfDay, endOfDay)
         .findAll();
   }
 }

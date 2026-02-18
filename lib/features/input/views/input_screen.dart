@@ -4,6 +4,7 @@ import 'package:spendflow_app/constants/app_colors.dart';
 import '../providers/amount_provider.dart'; // 先ほど作成したProviderをインポート
 import '../widgets/category_selector.dart';
 import '../widgets/custom_numpad.dart';
+import 'package:spendflow_app/features/calendar/views/calendar_screen.dart';
 
 class InputScreen extends ConsumerWidget {
   const InputScreen({super.key});
@@ -31,7 +32,10 @@ class InputScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.calendar_month, color: AppColors.primary),
             onPressed: () {
-              // TODO: カレンダー画面への遷移
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CalendarScreen()),
+              );
             },
           ),
         ],
@@ -44,11 +48,10 @@ class InputScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   '金額',
                   style: TextStyle(
-                    color: AppColors.primary,
-                    opacity: 0.6,
+                    color: AppColors.primary.withOpacity(0.6),
                     fontWeight: FontWeight.bold,
                   ),
                 ),

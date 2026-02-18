@@ -5,6 +5,7 @@ import 'package:spendflow_app/repositories/expense_repository.dart';
 import 'package:spendflow_app/models/expense.dart';
 import '../providers/amount_provider.dart';
 import '../providers/input_state_provider.dart';
+import 'package:spendflow_app/constants/app_colors.dart';
 
 class CustomNumpad extends ConsumerWidget {
   const CustomNumpad({super.key});
@@ -78,16 +79,16 @@ class CustomNumpad extends ConsumerWidget {
                 final amount = ref.read(amountProvider);
                 if (amount <= 0) return; // 0円は保存しない
 
-                final category = ref.read(selectedCategoryProvider);
                 final type = ref.read(selectedTypeProvider);
                 final freq = ref.read(selectedFrequencyProvider);
+                final selectedCategory = ref.read(selectedCategoryProvider);
 
                 // 2. 保存するデータモデルを作成
                 final expense = Expense()
                   ..amount = amount
                   ..date =
                       DateTime.now() // 今日の日付
-                  ..category = category
+                  ..category = selectedCategory
                   ..type = type
                   ..frequency = freq
                   ..isPending = false;
