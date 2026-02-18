@@ -1,3 +1,5 @@
+import 'package:spendflow_app/features/calendar/providers/calendar_providers.dart';
+import 'package:spendflow_app/features/analysis/providers/analysis_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/amount_provider.dart';
@@ -95,6 +97,9 @@ class CustomNumpad extends ConsumerWidget {
 
                 // 3. リポジトリ経由でDBに保存
                 await ref.read(expenseRepositoryProvider).saveExpense(expense);
+
+                ref.invalidate(dailyExpensesProvider);
+                ref.invalidate(monthlyExpensesProvider);
 
                 // 4. 入力値をリセット
                 ref.read(amountProvider.notifier).reset();
