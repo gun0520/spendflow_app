@@ -38,4 +38,10 @@ class ExpenseRepository {
         .dateBetween(startOfDay, endOfDay)
         .findAll();
   }
+
+  Future<void> deleteExpense(int id) async {
+    await isar.writeTxn(() async {
+      await isar.expenses.delete(id);
+    });
+  }
 }

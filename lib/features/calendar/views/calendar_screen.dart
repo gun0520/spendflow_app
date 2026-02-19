@@ -5,6 +5,8 @@ import 'package:spendflow_app/constants/app_colors.dart';
 import 'package:spendflow_app/repositories/expense_repository.dart';
 import 'package:spendflow_app/models/expense.dart';
 import 'package:spendflow_app/features/calendar/providers/calendar_providers.dart';
+import 'dart:io';
+import 'package:spendflow_app/features/analysis/providers/analysis_provider.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
@@ -117,10 +119,22 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.lightAccent,
-                  child: const Text('💰'), // 本来はカテゴリごとのアイコン
-                ),
+                onTap: () => _showEditDialog(context, ref, item),
+
+                leading: item.receiptImagePath != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(item.receiptImagePath!),
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : CircleAvatar(
+                        backgroundColor: AppColors.lightAccent,
+                        child: const Text('💰'), //本当ならここは各項目のアイコン
+                      ),
                 title: Text(
                   item.category,
                   style: const TextStyle(
@@ -140,6 +154,118 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Expense expense,
+  ) async {
+    // 現在の金額を最初から入力欄に入れておく
+    final amountController = TextEditingController(
+      text: expense.amount.toInt().toString(),
+    );
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            '金額の修正',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: TextField(
+            controller: amountController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: '新しい金額',
+              prefixText: '¥ ',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                // DBから削除
+                await ref
+                    .read(expenseRepositoryProvider)
+                    .deleteExpense(expense.id);
+
+                // 画面を最新に更新
+                ref.invalidate(dailyExpensesProvider);
+                ref.invalidate(monthlyExpensesProvider);
+
+                if (context.mounted) {
+                  Navigator.pop(context); // ダイアログを閉じる
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('削除しました')));
+                }
+              },
+              child: const Text(
+                '削除',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('キャンセル', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () async {
+                // 入力された文字を数字に変換
+                final newAmount = int.tryParse(amountController.text);
+                if (newAmount != null && newAmount > 0) {
+                  // 1. 金額を上書き
+                  expense.amount = newAmount;
+
+                  // 2. DBに保存（Isarは同じIDなら自動で「上書き更新」になります）
+                  await ref
+                      .read(expenseRepositoryProvider)
+                      .saveExpense(expense);
+
+                  // 3. 画面のデータを最新にリセット
+                  ref.invalidate(dailyExpensesProvider);
+                  ref.invalidate(monthlyExpensesProvider);
+
+                  if (context.mounted) {
+                    Navigator.pop(context); // ダイアログを閉じる
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('金額を修正しました！'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text(
+                '保存',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );

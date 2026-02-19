@@ -5,6 +5,9 @@ import '../providers/amount_provider.dart'; // 先ほど作成したProviderを�
 import '../widgets/category_selector.dart';
 import '../widgets/custom_numpad.dart';
 import 'package:spendflow_app/features/calendar/views/calendar_screen.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import '../providers/input_state_provider.dart';
 
 class InputScreen extends ConsumerWidget {
   const InputScreen({super.key});
@@ -13,6 +16,8 @@ class InputScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 金額の状態を監視
     final amount = ref.watch(amountProvider);
+    //レシートの監視
+    final receiptImagePath = ref.watch(receiptImageProvider);
     // 状態からフォーマット済みの文字列（カンマ区切り）を取得
     final formattedAmount = ref.read(amountProvider.notifier).formattedAmount;
 
@@ -82,6 +87,45 @@ class InputScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                if (receiptImagePath != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        // サムネイル画像
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(
+                              receiptImagePath,
+                            ), // ※エラーが出る場合は import 'dart:io'; をファイルの一番上に追加してください
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        // 削除（バツ）ボタン
+                        GestureDetector(
+                          onTap: () {
+                            ref.read(receiptImageProvider.notifier).state =
+                                null;
+                          },
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
@@ -96,8 +140,17 @@ class InputScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.accent,
         elevation: 4,
-        onPressed: () {
-          // TODO: カメラ起動（連写モード）
+        onPressed: () async {
+          final picker = ImagePicker();
+
+          final XFile? image = await picker.pickImage(
+            source: ImageSource.camera,
+            imageQuality: 50,
+          );
+
+          if (image != null) {
+            ref.read(receiptImageProvider.notifier).state = image.path;
+          }
         },
         child: const Icon(Icons.camera_alt, color: Colors.white, size: 28),
       ),

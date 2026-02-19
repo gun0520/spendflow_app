@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 // 現在選択されているカテゴリを管理（初期値は未分類など）
 final selectedCategoryProvider = StateProvider<String>((ref) => '食費');
@@ -18,3 +19,6 @@ final selectedTypeProvider = StateProvider<String>((ref) => 'variable');
 
 // 頻度（毎月/不定期）を管理
 final selectedFrequencyProvider = StateProvider<String>((ref) => 'monthly');
+
+//画像のパス
+final receiptImageProvider = StateProvider<String?>((ref) => null);

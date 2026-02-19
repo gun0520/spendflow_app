@@ -84,6 +84,7 @@ class CustomNumpad extends ConsumerWidget {
                 final type = ref.read(selectedTypeProvider);
                 final freq = ref.read(selectedFrequencyProvider);
                 final selectedCategory = ref.read(selectedCategoryProvider);
+                final receiptPath = ref.read(receiptImageProvider);
 
                 // 2. 保存するデータモデルを作成
                 final expense = Expense()
@@ -93,7 +94,8 @@ class CustomNumpad extends ConsumerWidget {
                   ..category = selectedCategory
                   ..type = type
                   ..frequency = freq
-                  ..isPending = false;
+                  ..isPending = false
+                  ..receiptImagePath = receiptPath;
 
                 // 3. リポジトリ経由でDBに保存
                 await ref.read(expenseRepositoryProvider).saveExpense(expense);
@@ -103,6 +105,7 @@ class CustomNumpad extends ConsumerWidget {
 
                 // 4. 入力値をリセット
                 ref.read(amountProvider.notifier).reset();
+                ref.read(receiptImageProvider.notifier).state = null;
 
                 // 5. 保存完了のフィードバック（スナックバー等）
                 if (context.mounted) {
