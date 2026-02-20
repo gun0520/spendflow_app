@@ -138,8 +138,9 @@ class InputScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accent,
-        elevation: 4,
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () async {
           final picker = ImagePicker();
 
@@ -152,7 +153,11 @@ class InputScreen extends ConsumerWidget {
             ref.read(receiptImageProvider.notifier).state = image.path;
           }
         },
-        child: const Icon(Icons.camera_alt, color: Colors.white, size: 28),
+        child: const Icon(
+          Icons.camera_alt_outlined,
+          color: Colors.white,
+          size: 28,
+        ),
       ),
     );
   }

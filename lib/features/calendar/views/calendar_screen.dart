@@ -43,12 +43,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                ),
-              ],
+              border: Border.all(color: const Color(0xFFCAE8E9), width: 1.5),
             ),
             child: TableCalendar(
               firstDay: DateTime.utc(2020, 1, 1),
@@ -115,8 +110,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               color: AppColors.white,
+              elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFFCAE8E9), width: 1),
               ),
               child: ListTile(
                 onTap: () => _showEditDialog(context, ref, item),
@@ -147,8 +144,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   '¥${item.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
                   style: const TextStyle(
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A415B),
+                    letterSpacing: -0.5,
                   ),
                 ),
               ),
@@ -173,8 +171,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: Color(0xFFCAE8E9), width: 2),
           ),
           title: const Text(
             '金額の修正',
@@ -225,7 +226,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
+                backgroundColor: const Color(0xFF3AB2B5),
+                elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
