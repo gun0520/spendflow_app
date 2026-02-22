@@ -35,6 +35,23 @@ class InputScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
+            icon: const Icon(
+              Icons.camera_alt_outlined,
+              color: Color(0xFF1A415B),
+            ),
+            onPressed: () async {
+              final picker = ImagePicker();
+              final XFile? image = await picker.pickImage(
+                source: ImageSource.camera,
+                imageQuality: 50,
+              );
+
+              if (image != null) {
+                ref.read(receiptImageProvider.notifier).state = image.path;
+              }
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.calendar_month, color: AppColors.primary),
             onPressed: () {
               Navigator.push(
@@ -131,33 +148,11 @@ class InputScreen extends ConsumerWidget {
           ),
 
           // 2. カテゴリセレクター
-          const CategorySelector(),
+          const Expanded(flex: 4, child: CategorySelector()),
 
           // 3. カスタムテンキー (画面下部)
-          const CustomNumpad(),
+          const Expanded(flex: 3, child: CustomNumpad()),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        onPressed: () async {
-          final picker = ImagePicker();
-
-          final XFile? image = await picker.pickImage(
-            source: ImageSource.camera,
-            imageQuality: 50,
-          );
-
-          if (image != null) {
-            ref.read(receiptImageProvider.notifier).state = image.path;
-          }
-        },
-        child: const Icon(
-          Icons.camera_alt_outlined,
-          color: Colors.white,
-          size: 28,
-        ),
       ),
     );
   }
