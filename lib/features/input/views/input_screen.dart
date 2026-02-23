@@ -8,6 +8,9 @@ import 'package:spendflow_app/features/calendar/views/calendar_screen.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../providers/input_state_provider.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 class InputScreen extends ConsumerWidget {
   const InputScreen({super.key});
@@ -47,7 +50,20 @@ class InputScreen extends ConsumerWidget {
               );
 
               if (image != null) {
-                ref.read(receiptImageProvider.notifier).state = image.path;
+                //アプリの安全な保存場所（ドキュメントディレクトリ）を取得
+                final directory = await getApplicationDocumentsDirectory();
+
+                //元の画像ファイル名を取得（例: image_picker_12345.jpg）
+                final fileName = p.basename(image.path);
+
+                //コピー先の新しいファイルパスを作成
+                final savedImagePath = '${directory.path}/$fileName';
+
+                // 一時ファイルを安全な場所へコピー
+                await File(image.path).copy(savedImagePath);
+
+                // 新しい安全なパスを状態（Provider）に保存
+                ref.read(receiptImageProvider.notifier).state = savedImagePath;
               }
             },
           ),

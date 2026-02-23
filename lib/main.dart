@@ -4,6 +4,7 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'models/expense.dart'; // 作成したモデル
 import 'app.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 // Isarのインスタンスを保持するグローバルなプロバイダ
 late Isar isar;
@@ -16,6 +17,8 @@ void main() async {
 
   // 2. Isarの初期化（Expenseモデルを登録）
   isar = await Isar.open([ExpenseSchema], directory: dir.path);
+
+  await initializeDateFormatting('ja_JP');
 
   runApp(const ProviderScope(child: SpendFlowApp()));
 }

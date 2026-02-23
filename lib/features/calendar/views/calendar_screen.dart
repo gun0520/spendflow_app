@@ -49,6 +49,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               border: Border.all(color: const Color(0xFFCAE8E9), width: 1.5),
             ),
             child: TableCalendar<Expense>(
+              locale: 'ja_JP',
               firstDay: DateTime.utc(2020, 1, 1),
               lastDay: DateTime.utc(2030, 12, 31),
               focusedDay: _focusedDay,
