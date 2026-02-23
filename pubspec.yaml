@@ -50,6 +50,8 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   analyzer: ^5.13.0
   build_runner: ^2.4.13
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.7
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -98,3 +100,22 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+  #
+  # アプリアイコンの設定
+  #
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  remove_alpha_ios: true
+
+  #
+  # スプラッシュ画面の設定
+  #
+flutter_native_splash:
+  color: "#F5F5F5"
+  image: "assets/splash.png"
+
+  android_12:
+    color: "#F5F5F5"
+    image: "assets/splash.png"
