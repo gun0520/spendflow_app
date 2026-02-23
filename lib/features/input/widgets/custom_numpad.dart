@@ -2,7 +2,6 @@ import 'package:spendflow_app/features/calendar/providers/calendar_providers.dar
 import 'package:spendflow_app/features/analysis/providers/analysis_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/amount_provider.dart';
 import 'package:spendflow_app/repositories/expense_repository.dart';
 import 'package:spendflow_app/models/expense.dart';
 import '../providers/amount_provider.dart';
@@ -28,52 +27,44 @@ class CustomNumpad extends ConsumerWidget {
     }
 
     return Container(
-      // ...（前回のコンテナ設定は維持）
+      // 下部に少し余白を持たせて、画面端ギリギリになるのを防ぐ
+      padding: const EdgeInsets.only(
+        left: 16.0,
+        right: 16.0,
+        top: 12.0,
+        bottom: 24.0,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(top: BorderSide(color: Color(0xFFCAE8E9), width: 1)),
+      ),
       child: Column(
         children: [
-          GridView.count(
-            shrinkWrap: true,
-            crossAxisCount: 3,
-            childAspectRatio: 1.5,
-            children:
-                [
-                  '1',
-                  '2',
-                  '3',
-                  '4',
-                  '5',
-                  '6',
-                  '7',
-                  '8',
-                  '9',
-                  'C',
-                  '0',
-                  '00',
-                ].map((val) {
-                  return InkWell(
-                    onTap: () => onKeyTap(val),
-                    child: Center(
-                      child: Text(
-                        val,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+          // 1. テンキー部分 (Expandedで余ったスペースを自動で均等割り当て)
+          Expanded(
+            child: Column(
+              children: [
+                _buildRow(['1', '2', '3'], onKeyTap),
+                _buildRow(['4', '5', '6'], onKeyTap),
+                _buildRow(['7', '8', '9'], onKeyTap),
+                _buildRow(['00', '0', 'C'], onKeyTap),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          // 保存ボタン
+
+          const SizedBox(height: 12),
+
+          // 2. 保存ボタン (高さを固定し、フラットでモダンなデザインに)
           SizedBox(
             width: double.infinity,
+            height: 56, // コンパクトかつ押しやすい高さ
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 20),
+                elevation: 0, // ★ 影を消してフラットデザインに
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
               onPressed: () async {
@@ -107,7 +98,7 @@ class CustomNumpad extends ConsumerWidget {
                 ref.read(amountProvider.notifier).reset();
                 ref.read(receiptImageProvider.notifier).state = null;
 
-                // 5. 保存完了のフィードバック（スナックバー等）
+                // 5. 保存完了のフィードバック
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -121,7 +112,7 @@ class CustomNumpad extends ConsumerWidget {
               child: const Text(
                 '保存して完了',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16, // 少し控えめなフォントサイズにしてモダンに
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -129,6 +120,47 @@ class CustomNumpad extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // --- 1行分の構築 ---
+  Widget _buildRow(List<String> keys, Function(String) onKeyTap) {
+    return Expanded(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: keys.map((key) => _buildKey(key, onKeyTap)).toList(),
+      ),
+    );
+  }
+
+  // --- 1ボタン分の構築 ---
+  Widget _buildKey(String label, Function(String) onKeyTap) {
+    // アクションキー（00やC）は少しデザインを変えて視認性を上げる
+    final isAction = label == 'C' || label == '00';
+
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(4.0), // ボタン間の隙間
+        child: InkWell(
+          onTap: () => onKeyTap(label),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isAction ? const Color(0xFFF3F3E7) : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 24, // ミニマルでスッキリしたサイズ
+                fontWeight: isAction ? FontWeight.w600 : FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
