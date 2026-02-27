@@ -12,6 +12,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
+final expenseMemoProvider = StateProvider<String?>((ref) => null);
+
 class InputScreen extends ConsumerWidget {
   const InputScreen({super.key});
 
@@ -37,6 +39,65 @@ class InputScreen extends ConsumerWidget {
           ),
         ),
         actions: [
+          IconButton(
+            icon: Icon(
+              // メモが入力されていれば色を変えて分かりやすくする
+              ref.watch(expenseMemoProvider) != null
+                  ? Icons.edit_note
+                  : Icons.notes,
+              color: ref.watch(expenseMemoProvider) != null
+                  ? const Color(0xFF3AB2B5)
+                  : const Color(0xFF1A415B),
+            ),
+            onPressed: () async {
+              // メモ入力用のダイアログを表示
+              String? initialMemo = ref.read(expenseMemoProvider);
+              final memoController = TextEditingController(text: initialMemo);
+
+              await showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('メモを入力', style: TextStyle(fontSize: 18)),
+                  content: TextField(
+                    controller: memoController,
+                    autofocus: true,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      hintText: '例：〇〇スーパー、〇〇さんとランチ',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'キャンセル',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3AB2B5),
+                      ),
+                      onPressed: () {
+                        // Providerにメモを保存して閉じる
+                        ref
+                            .read(expenseMemoProvider.notifier)
+                            .state = memoController.text.isEmpty
+                            ? null
+                            : memoController.text;
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        '保存',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(
               Icons.camera_alt_outlined,

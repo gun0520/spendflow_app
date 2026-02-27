@@ -8,6 +8,8 @@ import '../providers/amount_provider.dart';
 import '../providers/input_state_provider.dart';
 import 'package:spendflow_app/constants/app_colors.dart';
 
+import '../views/input_screen.dart';
+
 class CustomNumpad extends ConsumerWidget {
   const CustomNumpad({super.key});
 
@@ -86,7 +88,8 @@ class CustomNumpad extends ConsumerWidget {
                   ..type = type
                   ..frequency = freq
                   ..isPending = false
-                  ..receiptImagePath = receiptPath;
+                  ..receiptImagePath = receiptPath
+                  ..memo = ref.read(expenseMemoProvider);
 
                 // 3. リポジトリ経由でDBに保存
                 await ref.read(expenseRepositoryProvider).saveExpense(expense);
@@ -97,6 +100,7 @@ class CustomNumpad extends ConsumerWidget {
                 // 4. 入力値をリセット
                 ref.read(amountProvider.notifier).reset();
                 ref.read(receiptImageProvider.notifier).state = null;
+                ref.invalidate(expenseMemoProvider);
 
                 // 5. 保存完了のフィードバック
                 if (context.mounted) {

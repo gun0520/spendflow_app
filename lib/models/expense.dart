@@ -21,4 +21,6 @@ class Expense {
   String? receiptImagePath; // レシート画像の保存パス（任意）
 
   bool isPending = false; // 未入力（レシート撮影のみ）フラグ
+
+  String? memo;
 }

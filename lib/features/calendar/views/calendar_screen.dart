@@ -191,9 +191,39 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
 
                 // ★ サブタイトルを「頻度・種類」の組み合わせに
-                subtitle: Text(
-                  '${item.frequency}・${item.type}', // 例：「毎月・固定費」
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${item.frequency}・${item.type}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    // メモが存在し、かつ空文字でない場合のみ表示
+                    if (item.memo != null && item.memo!.isNotEmpty) ...[
+                      const SizedBox(height: 2), // 少し隙間を空ける
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.edit_note,
+                            size: 14,
+                            color: Color(0xFF3AB2B5),
+                          ), // 小さなアイコンを添える
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              item.memo!,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.blueGrey,
+                              ),
+                              maxLines: 1, // 長いメモは1行で省略「...」にする
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
 
                 trailing: Text(
@@ -240,15 +270,15 @@ class _EditExpenseNumpad extends ConsumerStatefulWidget {
 
 class _EditExpenseNumpadState extends ConsumerState<_EditExpenseNumpad> {
   late String amountStr;
+  String? currentMemo;
 
   @override
   void initState() {
     super.initState();
-    // 最初に現在の金額をセットしておく
     amountStr = widget.expense.amount.toInt().toString();
+    currentMemo = widget.expense.memo;
   }
 
-  // テンキーが押された時の処理
   void _onKeyTap(String val) {
     setState(() {
       if (val == 'C') {
@@ -262,12 +292,10 @@ class _EditExpenseNumpadState extends ConsumerState<_EditExpenseNumpad> {
           amountStr += val;
         }
       }
-      // 異常な桁数を防ぐセーフティ
       if (amountStr.length > 9) amountStr = amountStr.substring(0, 9);
     });
   }
 
-  // カンマ区切りのフォーマット
   String get formattedAmount {
     final intAmount = int.tryParse(amountStr) ?? 0;
     return intAmount.toString().replaceAllMapped(
@@ -278,9 +306,9 @@ class _EditExpenseNumpadState extends ConsumerState<_EditExpenseNumpad> {
 
   @override
   Widget build(BuildContext context) {
-    // 画面の約70%の高さのハーフモーダル
+    // 高さは 0.8 (80%) のまま維持
     return Container(
-      height: MediaQuery.of(context).size.height * 0.7,
+      height: MediaQuery.of(context).size.height * 0.8,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -314,34 +342,142 @@ class _EditExpenseNumpadState extends ConsumerState<_EditExpenseNumpad> {
                     color: Color(0xFF1A415B),
                   ),
                 ),
-                TextButton(
-                  onPressed: () async {
-                    // 削除処理
-                    await ref
-                        .read(expenseRepositoryProvider)
-                        .deleteExpense(widget.expense.id);
-                    ref.invalidate(dailyExpensesProvider);
-                    ref.invalidate(monthlyExpensesProvider);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(const SnackBar(content: Text('削除しました')));
-                    }
-                  },
-                  child: const Text(
-                    '削除',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
+
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        currentMemo != null && currentMemo!.isNotEmpty
+                            ? Icons.edit_note
+                            : Icons.notes,
+                        color: currentMemo != null && currentMemo!.isNotEmpty
+                            ? const Color(0xFF3AB2B5)
+                            : Colors.grey,
+                      ),
+                      onPressed: () async {
+                        final memoController = TextEditingController(
+                          text: currentMemo,
+                        );
+                        await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text(
+                              'メモを編集',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            content: TextField(
+                              controller: memoController,
+                              autofocus: true,
+                              maxLines: 3,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text(
+                                  'キャンセル',
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF3AB2B5),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    currentMemo = memoController.text.isEmpty
+                                        ? null
+                                        : memoController.text;
+                                  });
+                                  Navigator.pop(context);
+                                },
+                                child: const Text(
+                                  '完了',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                  ),
+                    TextButton(
+                      onPressed: () async {
+                        await ref
+                            .read(expenseRepositoryProvider)
+                            .deleteExpense(widget.expense.id);
+                        ref.invalidate(dailyExpensesProvider);
+                        ref.invalidate(monthlyExpensesProvider);
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('削除しました')),
+                          );
+                        }
+                      },
+                      child: const Text(
+                        '削除',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
 
-          // 2. 金額表示エリア
+          // 2. 画像表示エリア（ここを大幅に修正しました）
+          if (widget.expense.receiptImagePath != null)
+            GestureDetector(
+              onTap: () {
+                // 画像タップ時に全画面プレビュー画面へ遷移
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => _FullScreenImageViewer(
+                      imagePath: widget.expense.receiptImagePath!,
+                      // Heroアニメーション用のユニークなタグ（IDを使用）
+                      heroTag: 'receipt_${widget.expense.id}',
+                    ),
+                    fullscreenDialog: true, // 下からスッと出てくるアニメーションに
+                  ),
+                );
+              },
+              // ★ Heroウィジェットで包むことで、シームレスな拡大アニメーションを実現
+              child: Hero(
+                tag: 'receipt_${widget.expense.id}',
+                child: Container(
+                  height: 140,
+                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F3E7),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFFCAE8E9),
+                      width: 1,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Center(
+                      child: Image.file(
+                        File(widget.expense.receiptImagePath!),
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const SizedBox.shrink(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // 3. 金額表示エリア (画像が追加されたのでflexを調整)
           Expanded(
             flex: 2,
             child: Row(
@@ -371,7 +507,7 @@ class _EditExpenseNumpadState extends ConsumerState<_EditExpenseNumpad> {
             ),
           ),
 
-          // 3. テンキーエリア
+          // 4. テンキーエリア
           Expanded(
             flex: 4,
             child: Container(
@@ -394,7 +530,7 @@ class _EditExpenseNumpadState extends ConsumerState<_EditExpenseNumpad> {
                     height: 56,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3AB2B5), // アクセント色
+                        backgroundColor: const Color(0xFF3AB2B5),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -404,6 +540,7 @@ class _EditExpenseNumpadState extends ConsumerState<_EditExpenseNumpad> {
                         final newAmount = int.tryParse(amountStr);
                         if (newAmount != null && newAmount > 0) {
                           widget.expense.amount = newAmount;
+                          widget.expense.memo = currentMemo;
                           await ref
                               .read(expenseRepositoryProvider)
                               .saveExpense(widget.expense);
@@ -439,7 +576,6 @@ class _EditExpenseNumpadState extends ConsumerState<_EditExpenseNumpad> {
     );
   }
 
-  // --- テンキーの行生成 ---
   Widget _buildRow(List<String> keys) {
     return Expanded(
       child: Row(
@@ -449,7 +585,6 @@ class _EditExpenseNumpadState extends ConsumerState<_EditExpenseNumpad> {
     );
   }
 
-  // --- テンキーのボタン生成 ---
   Widget _buildKey(String label) {
     final isAction = label == 'C' || label == '00';
     return Expanded(
@@ -471,6 +606,45 @@ class _EditExpenseNumpadState extends ConsumerState<_EditExpenseNumpad> {
                 fontWeight: isAction ? FontWeight.w600 : FontWeight.bold,
                 color: const Color(0xFF1A415B),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FullScreenImageViewer extends StatelessWidget {
+  final String imagePath;
+  final String heroTag;
+
+  const _FullScreenImageViewer({
+    required this.imagePath,
+    required this.heroTag,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black, // 画像が際立つように背景は黒
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white), // 戻るボタンを白に
+      ),
+      body: Center(
+        // ★ InteractiveViewer でピンチズーム（拡大・縮小）を可能に！
+        child: InteractiveViewer(
+          panEnabled: true,
+          minScale: 0.8,
+          maxScale: 4.0, // 最大4倍まで拡大可能
+          child: Hero(
+            tag: heroTag, // Heroアニメーションの紐付け
+            child: Image.file(
+              File(imagePath),
+              fit: BoxFit.contain,
+              width: double.infinity,
+              height: double.infinity,
             ),
           ),
         ),
